@@ -1,6 +1,7 @@
 import { createContext, useEffect, useState } from "react";
 import { GetUserData } from "../service/loginApi";
 
+
 export const AuthContext = createContext()
 
 // ! every context has a provider which is a function the provides the app with data
