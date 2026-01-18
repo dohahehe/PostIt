@@ -10,8 +10,7 @@ A modern social media application built with React and Tailwind CSS. Share posts
 
 ## 🌟 Live Demo
 
-**Live Application:** [https://postit-app.vercel.app](https://postit-app.vercel.app)  
-**API Documentation:** [https://linked-posts.routemisr.com](https://linked-posts.routemisr.com)
+**Live Application:** [https://postit-app.vercel.app](https://post-it-bhg2.vercel.app/)  
 
 ## ✨ Features
 
