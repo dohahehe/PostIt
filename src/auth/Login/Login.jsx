@@ -2,7 +2,7 @@ import {Input, Select, SelectItem, Button} from "@heroui/react";
 import { useContext, useState } from "react";
 import schema from '../../schema/LoginSchema'
 import { useForm } from "react-hook-form"
-import { SignIn } from "../../service/loginApi";
+import { SignIn } from "../../service/LoginApi";
 import { NavLink, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { zodResolver } from '@hookform/resolvers/zod';

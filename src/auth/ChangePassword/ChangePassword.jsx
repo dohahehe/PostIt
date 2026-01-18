@@ -1,7 +1,7 @@
 import {Input, Select, SelectItem, Button} from "@heroui/react";
 import { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form"
-import { ChangePass } from "../../service/loginApi";
+import { ChangePass } from "../../service/LoginApi";
 import { NavLink, useNavigate } from "react-router-dom";
 import schema from "../../schema/ChangePassSchema";
 import { zodResolver } from '@hookform/resolvers/zod';
