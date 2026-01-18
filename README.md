@@ -1,4 +1,4 @@
-# 📱 PostIt - Social Media Application
+# 📱 PostIt 
 
 ![PostIt Banner](https://img.shields.io/badge/PostIt-Social_Media_App-blue)
 ![React](https://img.shields.io/badge/React-19.2.0-61DAFB?logo=react)
@@ -6,7 +6,7 @@
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.1.18-38B2AC?logo=tailwind-css)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-A modern, feature-rich social media application built with React and Tailwind CSS. Share posts, connect with friends, and engage with content in real-time.
+A modern social media application built with React and Tailwind CSS. Share posts, and engage with content in real-time.
 
 ## 🌟 Live Demo
 
