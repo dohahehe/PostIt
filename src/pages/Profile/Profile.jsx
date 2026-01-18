@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getUserPosts } from "../../service/PostApi";
 import PostCard from "../../components/PostCard/PostCard";
 import LoadingPage from "../../components/LoadingPage/LoadingPage";
-import { uploadProfileImage } from "../../service/loginApi";
+import { uploadProfileImage } from "../../service/LoginApi";
 import { MdEdit } from "react-icons/md";
 import { NavLink } from "react-router-dom";
 

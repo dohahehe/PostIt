@@ -3,7 +3,7 @@ import PostCard from './../../components/PostCard/PostCard';
 import { getAllPosts } from '../../service/PostApi';
 import LoadingPage from '../../components/LoadingPage/LoadingPage';
 import CreatePost from '../../components/CreatePost/CreatePost';
-import { GetUserData } from '../../service/loginApi';
+import { GetUserData } from '../../service/LoginApi';
 
 
 function Home() {
