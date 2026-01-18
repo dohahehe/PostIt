@@ -1,10 +1,10 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 import {HeroUIProvider} from "@heroui/react";
-import {Button} from "@heroui/button";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { RouterProvider } from 'react-router-dom';
+import { route } from '../router';
+import { AuthContextProvider } from './context/AuthContext';
+
 
 const queryClient = new QueryClient();
 function App() {
@@ -12,10 +12,9 @@ function App() {
     <>
     <QueryClientProvider client={queryClient}> 
     <HeroUIProvider>
-      <div>
-        <h1 className="text-3xl font-bold underline">Hello world!</h1>
-        <Button color="primary">Button</Button>
-      </div>
+       <AuthContextProvider>
+          <RouterProvider router={route} /> {/* sends the application as prop to context */}
+        </AuthContextProvider>
     </HeroUIProvider>
     </QueryClientProvider>
     </>
