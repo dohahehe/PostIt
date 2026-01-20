@@ -5,6 +5,8 @@ import { ChangePass } from "../../service/LoginApi";
 import { NavLink, useNavigate } from "react-router-dom";
 import schema from "../../schema/ChangePassSchema";
 import { zodResolver } from '@hookform/resolvers/zod';
+import toast from "react-hot-toast";
+import { Helmet } from "react-helmet";
 
 function ChangePassword() {
     const [message, setMessage] = useState({ text: '', type: '', show: false });
@@ -30,6 +32,8 @@ function ChangePassword() {
           
           // Check for success
           if (result.message === 'success') {
+            toast.success('Password Changed Successfully!')
+
             setMessage({ 
               text: "Password changed successfully!", 
               type: 'success',
@@ -64,6 +68,10 @@ function ChangePassword() {
     }
   return (
     <>
+      <Helmet>
+        <meta charSet="utf-8" />
+        <title>Change Password</title>
+      </Helmet>
       <div className='min-h-screen w-full text-center flex justify-center items-center'>
         <div className='m-auto p-5 bg-white shadow rounded-2xl lg:w-1/3 md:w-1/2 min-w-xs'>
           <h2 className='text-2xl font-bold my-4 text-sky-700'>Re-set Password</h2>

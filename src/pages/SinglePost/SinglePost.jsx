@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getSinglePost } from '../../service/PostApi';
 import PostCard from '../../components/PostCard/PostCard';
 import LoadingPage from '../../components/LoadingPage/LoadingPage';
+import { Helmet } from 'react-helmet';
 
 // ? useParams: returns all parameters in url
 
@@ -28,6 +29,11 @@ function SinglePost() {
   }
 
   return (
+    <>
+      <Helmet>
+          <meta charSet="utf-8" />
+          <title>Post</title>
+      </Helmet>
     <div className='min-h-screen container flex flex-col items-center'>
       {post ?  
       <PostCard post={post} allComment={true} callback={fetchPost} /> 
@@ -36,6 +42,7 @@ function SinglePost() {
       }
      
     </div>
+    </>
   )
 }
 

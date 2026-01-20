@@ -5,6 +5,7 @@ import CommentCard from '../CommentCard/CommentCard';
 import { CreateComment } from '../../service/CommentApi';
 import PostDropDown from '../PostDropDown/PostDropDown';
 import { AuthContext } from '../../context/AuthContext';
+import toast from 'react-hot-toast';
 
 function PostCard({post, allComment, callback}) {
   const [commentContent, setCommentContent] = useState('');
@@ -19,6 +20,8 @@ function PostCard({post, allComment, callback}) {
     console.log(response);
     if (response.message == 'success') {
       await callback();
+      toast.success('Commented!')
+
       setCommentContent('');
     }
     setLoading(false)

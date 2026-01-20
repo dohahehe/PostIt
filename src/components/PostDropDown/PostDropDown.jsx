@@ -11,6 +11,7 @@ import {
 import { useState } from 'react';
 import { IoIosCloseCircleOutline } from 'react-icons/io';
 import { DeletePost, UpdatePost } from '../../service/PostApi';
+import toast from 'react-hot-toast';
 
 function PostDropDown({callback, postId}) {
   const {isOpen, onOpen, onOpenChange} = useDisclosure();
@@ -33,6 +34,7 @@ function PostDropDown({callback, postId}) {
 
     if(response.message == 'success'){
       await callback();
+      toast.success('Post Updated!')
       setPostBody("");
       setPostImage("");
       onOpenChange(false);
@@ -49,6 +51,7 @@ function PostDropDown({callback, postId}) {
     try{
       const response = await DeletePost(postId);
       if(response.message == 'success'){
+        toast.success('Post Deleted!')
         await callback();
       }
     } catch(error){

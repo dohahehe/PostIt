@@ -6,6 +6,8 @@ import { SignIn } from "../../service/LoginApi";
 import { NavLink, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { zodResolver } from '@hookform/resolvers/zod';
+import toast from "react-hot-toast";
+import { Helmet } from "react-helmet";
 
 
 // ? Conttrolled VS Unconrolled components
@@ -40,6 +42,8 @@ function Login() {
       // console.log('Login result:', result);
       
       if (result.success === true || result.token) {
+        toast.success('Logged in Successfully!')
+
         // Login successful
         setMessage({ 
           text: result.message || "Login successful!", 
@@ -83,6 +87,10 @@ function Login() {
 
   return (
     <>
+      <Helmet>
+          <meta charSet="utf-8" />
+          <title>Login</title>
+      </Helmet>
       <div className='min-h-screen w-full text-center flex justify-center items-center'>
         <div className='m-auto p-5 bg-white shadow rounded-2xl lg:w-1/3 md:w-1/2 min-w-xs'>
           <h2 className='text-2xl font-bold my-4 text-sky-700'>Login</h2>

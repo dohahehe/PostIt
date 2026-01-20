@@ -4,6 +4,7 @@ import { getAllPosts } from '../../service/PostApi';
 import LoadingPage from '../../components/LoadingPage/LoadingPage';
 import CreatePost from '../../components/CreatePost/CreatePost';
 import { GetUserData } from '../../service/LoginApi';
+import { Helmet } from 'react-helmet';
 
 
 function Home() {
@@ -28,19 +29,26 @@ function Home() {
   }, []);
 
   return (
-    <div className='min-h-screen container flex flex-col items-center'>
-      <CreatePost callback={getposts} />
-      {/* allPosts > 0 ? 'posts gat' : 'loading' */}
-      {allPosts.length > 0 ? 
-        allPosts.map((post) => (
-          <PostCard key={post._id || post.id} post={post} allComment={false} callback={getposts} />
-        ))
-        : 
-        <LoadingPage />
-      }
-       
-      
-    </div>
+    <>
+      <Helmet>
+          <meta charSet="utf-8" />
+          <title>Home</title>
+      </Helmet>
+      <div className='min-h-screen container flex flex-col items-center'>
+        <CreatePost callback={getposts} />
+        {/* allPosts > 0 ? 'posts gat' : 'loading' */}
+        {allPosts.length > 0 ? 
+          allPosts.map((post) => (
+            <PostCard key={post._id || post.id} post={post} allComment={false} callback={getposts} />
+          ))
+          : 
+          <LoadingPage />
+        }
+        
+        
+      </div>
+    </>
+    
   )
 }
 

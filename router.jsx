@@ -8,11 +8,12 @@ import Profile from "./src/pages/Profile/Profile";
 import SinglePost from "./src/pages/SinglePost/SinglePost";
 import Notfound from "./src/components/Notfound/Notfound";
 import ProtectRoutes from "./src/pages/ProtectRoutes";
+import AuthProtectedRoutes from "./src/pages/AuthProtectedRoutes";
 
 export const route = createBrowserRouter([
   {path: '', element: <Layout /> , children: [
-    {path: '', element:   <Login />,},
-    {path: 'register', element: <Register />},
+    {path: '', element:  <AuthProtectedRoutes><Login /></AuthProtectedRoutes>},
+    {path: 'register', element: <AuthProtectedRoutes><Register/></AuthProtectedRoutes>},
     {path: 'change-password', element: <ProtectRoutes><ChangePassword /></ProtectRoutes>},
     {path: 'home', element: <ProtectRoutes><Home /></ProtectRoutes>},
     {path: 'profile', element: <ProtectRoutes><Profile /></ProtectRoutes>},

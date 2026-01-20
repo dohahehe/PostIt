@@ -7,6 +7,8 @@ import LoadingPage from "../../components/LoadingPage/LoadingPage";
 import { uploadProfileImage } from "../../service/LoginApi";
 import { MdEdit } from "react-icons/md";
 import { NavLink } from "react-router-dom";
+import toast from "react-hot-toast";
+import { Helmet } from "react-helmet";
 
 function Profile() {
   const { userData } = useContext(AuthContext);
@@ -33,7 +35,8 @@ function Profile() {
     try {
       const response = await uploadProfileImage(formData);
       if (response.message === 'success') {
-        window.location.reload();
+        toast.success('Profile Picture Updated!');
+        
       }
     } catch (error) {
       console.error('Upload failed:', error);
@@ -42,7 +45,13 @@ function Profile() {
     }
   
   return (
-    <main className="profile-page min-h-screen w-full pt-10 md:pt-0 ">
+    <>
+      <Helmet>
+          <meta charSet="utf-8" />
+          <title>Profile</title>
+      </Helmet>
+
+      <main className="profile-page min-h-screen w-full pt-10 md:pt-0 ">
       {/* Profile Content Section */}
       <section className="relative w-full py-8 md:pt-16 md:pb-8">
         <div className="container px-6 lg:px-56 mx-auto">
@@ -132,6 +141,8 @@ function Profile() {
 
 
     </main>
+    </>
+    
   )
 }
 

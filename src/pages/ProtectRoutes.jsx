@@ -9,11 +9,6 @@ function ProtectRoutes({children}) {
       // no token
       return <Navigate to='/'/>
     }
-  return (
-    <div>
-        
-    </div>
-  )
 }
 
 export default ProtectRoutes

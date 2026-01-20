@@ -5,6 +5,8 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Signup } from "../../service/RegisterApi";
 import { NavLink, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import { Helmet } from "react-helmet";
 // ? Conttrolled VS Unconrolled components
 // ! Controlled: control its value through react, you have the value all the time
 // ! Unconrolled: control its value through DOM, you only have the value when you submit
@@ -41,6 +43,7 @@ function Register () {
       
       if (result.success === true) {
         // SUCCESS
+        toast.success('Registered Successfully!')
         setMessage({ 
           text: result.message || "Registration successful!", 
           type: 'success',
@@ -48,6 +51,8 @@ function Register () {
         });
         
         reset();
+
+
         
         // Redirect to login after 3 seconds
         setTimeout(() => {
@@ -76,6 +81,10 @@ function Register () {
 
   return (
     <>
+      <Helmet>
+        <meta charSet="utf-8" />
+        <title>Register</title>
+      </Helmet>
       <div className='min-h-screen w-full text-center flex justify-center items-center'>
         <div className='m-auto p-5 bg-white shadow rounded-2xl lg:w-1/3 md:w-1/2 min-w-xs'>
           <h2 className='text-2xl font-bold my-4 text-sky-700'>Register Now!</h2>

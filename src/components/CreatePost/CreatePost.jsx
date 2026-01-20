@@ -2,6 +2,7 @@ import {Button} from "@heroui/react";
 import { useState } from "react";
 import { CreateMyPost } from "../../service/PostApi";
 import { IoIosCloseCircleOutline } from "react-icons/io";
+import toast from "react-hot-toast";
 
 function CreatePost({callback}) {
     const [Loading, setLoading] = useState(false);
@@ -22,6 +23,7 @@ function CreatePost({callback}) {
         console.log(response);
         if(response.message == 'success'){
             await callback();
+            toast.success('Posted!');
             setPostBody("");
             setPostImage("");
         }

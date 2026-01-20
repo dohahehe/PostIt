@@ -10,6 +10,7 @@ import {
 } from "@heroui/react";
 import { DeleteComment, UpdateComment } from '../../service/CommentApi';
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 
 function CommentDropDown({comment, callback}) {
   const [loading, setLoading] = useState(false);
@@ -25,6 +26,7 @@ function CommentDropDown({comment, callback}) {
 
     if(response.message == 'success'){
       await callback();
+      toast.success('Comment Updated!')
       setCommentBody("");
       onOpenChange(false);
     }
@@ -40,6 +42,7 @@ function CommentDropDown({comment, callback}) {
     // console.log(response);
     if (response.message == 'success') {
       await callback();
+      toast.success('Comment Deleted!')
     }
     setLoading(false);
   }
