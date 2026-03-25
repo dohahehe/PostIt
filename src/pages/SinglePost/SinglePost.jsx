@@ -34,7 +34,7 @@ function SinglePost() {
           <meta charSet="utf-8" />
           <title>Post</title>
       </Helmet>
-    <div className='min-h-screen container flex flex-col items-center py-4'>
+    <div className='min-h-screen container px-2 md:px-10 lg:px-20 xl:px-56 flex flex-col items-center py-4'>
       {post ?  
       <PostCard post={post} allComment={true} callback={fetchPost} /> 
       : 
