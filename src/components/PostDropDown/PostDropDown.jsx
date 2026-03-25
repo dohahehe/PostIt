@@ -30,9 +30,9 @@ function PostDropDown({callback, postId}) {
     }
 
     const response = await UpdatePost(formData, postId);
-    console.log(response);
+    // console.log(response);
 
-    if(response.message == 'success'){
+    if(response.success){
       await callback();
       toast.success('Post Updated!')
       setPostBody("");
@@ -50,7 +50,7 @@ function PostDropDown({callback, postId}) {
   async function deletePost(){
     try{
       const response = await DeletePost(postId);
-      if(response.message == 'success'){
+      if(response.success){
         toast.success('Post Deleted!')
         await callback();
       }

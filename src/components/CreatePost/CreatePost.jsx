@@ -1,72 +1,160 @@
-import {Button} from "@heroui/react";
+import { Button } from "@heroui/react";
 import { useState } from "react";
 import { CreateMyPost } from "../../service/PostApi";
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import toast from "react-hot-toast";
 
-function CreatePost({callback}) {
+function CreatePost({ callback }) {
     const [Loading, setLoading] = useState(false);
     const [postBody, setPostBody] = useState("");
-    const [postImage, setPostImage] = useState("");
+    const [postImage, setPostImage] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+    const [charCount, setCharCount] = useState(0);
+    const maxChars = 300;
 
-    async function addPost(e){
+    async function addPost(e) {
         e.preventDefault();
+        
+        // Validate post body
+        if (!postBody.trim()) {
+            toast.error("Please write something before posting");
+            return;
+        }
+        
         setLoading(true);
         
         const formData = new FormData();
-        formData.append('body', postBody ?? '');
-        if(postImage){
+        formData.append('body', postBody.trim());
+        
+        if (postImage) {
+            // Validate image size (max 5MB)
+            if (postImage.size > 5 * 1024 * 1024) {
+                toast.error("Image must be less than 5MB");
+                setLoading(false);
+                return;
+            }
             formData.append('image', postImage);
         }
 
-        const response = await CreateMyPost(formData);
-        console.log(response);
-        if(response.message == 'success'){
-            await callback();
-            toast.success('Posted!');
-            setPostBody("");
-            setPostImage("");
+        try {
+            const response = await CreateMyPost(formData);
+            console.log("Create post response:", response);
+            
+            if (response?.message === 'success' || response?.data?.message === 'success') {
+                await callback();
+                toast.success('Posted successfully!');
+                // Reset form
+                setPostBody("");
+                setPostImage(null);
+                setImagePreview(null);
+                setCharCount(0);
+            } else {
+                // Handle API error response
+                const errorMessage = response?.data?.message || response?.message || "Failed to create post";
+                toast.error(errorMessage);
+            }
+        } catch (error) {
+            console.error("Error creating post:", error);
+            toast.error("Failed to create post. Please try again.");
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     }
 
-    function handleImage(e){
-        setPostImage(e.target.files[0]);
-        e.target.value = '';
+    function handleImage(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Check file type
+            if (!file.type.startsWith('image/')) {
+                toast.error("Please select an image file");
+                return;
+            }
+            
+            // Check file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                toast.error("Image must be less than 5MB");
+                return;
+            }
+            
+            setPostImage(file);
+            // Create preview URL
+            const previewUrl = URL.createObjectURL(file);
+            setImagePreview(previewUrl);
+        }
+        e.target.value = ''; // Reset input
     }
+
+    const removeImage = () => {
+        if (imagePreview) {
+            URL.revokeObjectURL(imagePreview);
+        }
+        setPostImage(null);
+        setImagePreview(null);
+    };
+
+    const handleBodyChange = (e) => {
+        const text = e.target.value;
+        if (text.length <= maxChars) {
+            setPostBody(text);
+            setCharCount(text.length);
+        }
+    };
 
     return (
-        <form onSubmit={addPost} className='container px-6 lg:px-56 flex justify-center h-fit'>
-                <div className="bg-white w-full rounded-2xl shadow-md h-auto py-3 px-3 my-5 flex flex-col">
-                    <textarea 
+        <form onSubmit={addPost} className='w-full flex justify-center h-fit'>
+            <div className="bg-white w-full rounded-2xl shadow-md h-auto py-3 px-3 my-5 flex flex-col">
+                <textarea 
                     value={postBody}
-                    onChange={(e) => {setPostBody(e.target.value)}}
-                    className="description rounded-xl bg-gray-100 sec p-3 h-30 border border-gray-300 outline-none" spellCheck="false" placeholder="Describe everything about this post here" />
-                    {/* preview image */}
-                    {postImage && 
-                        <div className="previewImage relative my-2">
-                            <IoIosCloseCircleOutline
-                            onClick={() => setPostImage("")}
-                            className="top-2 right-2 absolute text-2xl text-gray-700 hover:text-gray-800 cursor-pointer" />
-                            <img className="max-h-80 w-full object-cover object-center rounded-lg" src={URL.createObjectURL(postImage)} alt="post" />
-                        </div>
-                    }
-                    {/* image input */}
-                    <input onChange={handleImage} type="file" className='hidden' id='image' />
-                    {/* icons */}
-                    <div className="icons flex text-gray-500 m-2">
-                        <label htmlFor="image">
-                            <svg className="mr-2 cursor-pointer hover:text-gray-700 border rounded-full p-1 h-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                        </label>
-                        <div className="count ml-auto text-gray-400 text-xs font-semibold">0/300</div>
+                    onChange={handleBodyChange}
+                    className="description rounded-xl bg-gray-100 p-3 h-30 border border-gray-300 outline-none focus:ring-2 focus:ring-blue-500"
+                    spellCheck="false"
+                    placeholder="Describe everything about this post here"
+                    disabled={Loading}
+                />
+                
+                {/* Image Preview */}
+                {imagePreview && (
+                    <div className="previewImage relative my-2">
+                        <IoIosCloseCircleOutline
+                            onClick={removeImage}
+                            className="top-2 right-2 absolute text-2xl text-gray-700 hover:text-gray-800 cursor-pointer bg-white rounded-full"
+                        />
+                        <img 
+                            className="max-h-80 w-full object-cover rounded-lg" 
+                            src={imagePreview} 
+                            alt="Post preview" 
+                        />
                     </div>
-                    {/* submit button */}
-                    <div className="buttons flex justify-end">
-                        <Button color="primary" variant="shadow" type='submit' isLoading={Loading} >
-                            Post
-                        </Button>           
+                )}
+                
+                {/* Image Input */}
+                <input onChange={handleImage} type="file" accept="image/*" className='hidden' id='image' />
+                
+                {/* Icons and Counter */}
+                <div className="icons flex text-gray-500 m-2 items-center">
+                    <label htmlFor="image" className="cursor-pointer">
+                        <svg className="mr-2 cursor-pointer hover:text-gray-700 border rounded-full p-1 h-7 w-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </label>
+                    <div className="count ml-auto text-gray-400 text-xs font-semibold">
+                        {charCount}/{maxChars}
                     </div>
                 </div>
+                
+                {/* Submit Button */}
+                <div className="buttons flex justify-end">
+                    <Button 
+                        color="primary" 
+                        variant="shadow" 
+                        type='submit' 
+                        isLoading={Loading}
+                        disabled={!postBody.trim() && !postImage}
+                    >
+                        Post
+                    </Button>           
+                </div>
+            </div>
         </form>
     )
 }

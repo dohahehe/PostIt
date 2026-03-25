@@ -1,125 +1,442 @@
 import { Link } from 'react-router-dom'; 
 import { useContext, useState } from 'react';
-import {Button} from "@heroui/react";
+import { Button, Avatar, Card, Divider, Spinner } from "@heroui/react";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { FaHeart, FaRegHeart, FaComment, FaShare, FaTrash, FaUserCircle, FaImage, FaBookmark, FaRegBookmark } from 'react-icons/fa';
 import CommentCard from '../CommentCard/CommentCard';
-import { CreateComment } from '../../service/CommentApi';
+import { CreateComment, GetPostComments } from '../../service/CommentApi';
+import { LikePost, BookmarkPost, SharePost } from '../../service/PostApi';
 import PostDropDown from '../PostDropDown/PostDropDown';
 import { AuthContext } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
-function PostCard({post, allComment, callback}) {
+function PostCard({ post, allComment = false, callback }) {
+  const { userData } = useContext(AuthContext); 
+  
   const [commentContent, setCommentContent] = useState('');
-  const [Loading, setLoading] = useState(false);
-  const {userData} = useContext(AuthContext);
-
-
-  async function createComment(e){
-    setLoading(true)
-    e.preventDefault();
-    const response = await CreateComment(commentContent, post.id);
-    console.log(response);
-    if (response.message == 'success') {
-      await callback();
-      toast.success('Commented!')
-
+  const [commentImage, setCommentImage] = useState(null);
+  const [commentImagePreview, setCommentImagePreview] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showComments, setShowComments] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareBody, setShareBody] = useState('');
+  
+  const [isLiked, setIsLiked] = useState(post?.likes?.includes(userData?._id) || false);
+  const [isBookmarked, setIsBookmarked] = useState(post?.bookmarked || false);
+  const [likesCount, setLikesCount] = useState(post?.likesCount || 0);
+  
+  const queryClient = useQueryClient();
+  
+  const limit = 3;
+  
+  // Fetch comments
+  const { 
+    data: commentsData, 
+    isLoading: commentsLoading,
+    isFetching: isFetchingMore,
+    refetch: refetchComments
+  } = useQuery({
+    queryKey: ['comments', post?._id, currentPage],
+    queryFn: () => GetPostComments(post?._id, currentPage, limit),
+    enabled: !!post?._id && (allComment || showComments),
+    staleTime: 1000 * 30,
+    keepPreviousData: true,
+  });
+  
+  // Create comment mutation
+  const createCommentMutation = useMutation({
+    mutationFn: ({ content, imageFile }) => CreateComment(content, post?._id, imageFile),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', post?._id] });
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      
+      toast.success('Comment added!');
       setCommentContent('');
+      setCommentImage(null);
+      setCommentImagePreview(null);
+      
+      if (callback) callback();
+      
+      if (currentPage !== 1) {
+        setCurrentPage(1);
+      } else {
+        refetchComments();
+      }
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'Failed to add comment');
+    },
+  });
+  
+  // Like/Unlike mutation
+  const likeMutation = useMutation({
+    mutationFn: () => LikePost(post?._id),
+    onSuccess: (data) => {
+      if (data?.message === 'success') {
+        setIsLiked(!isLiked);
+        setLikesCount(prev => isLiked ? prev - 1 : prev + 1);
+        toast.success(isLiked ? 'Unliked post' : 'Liked post');
+        queryClient.invalidateQueries({ queryKey: ['posts'] });
+        if (callback) callback();
+      }
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'Failed to like/unlike post');
+    },
+  });
+  
+  // Bookmark/Unbookmark mutation
+  const bookmarkMutation = useMutation({
+    mutationFn: () => BookmarkPost(post?._id),
+    onSuccess: (data) => {
+      if (data?.message === 'success') {
+        setIsBookmarked(!isBookmarked);
+        toast.success(isBookmarked ? 'Removed from bookmarks' : 'Added to bookmarks');
+        queryClient.invalidateQueries({ queryKey: ['posts'] });
+        if (callback) callback();
+      }
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'Failed to bookmark/unbookmark post');
+    },
+  });
+  
+  // Share mutation
+  const shareMutation = useMutation({
+    mutationFn: () => SharePost(post?._id, shareBody),
+    onSuccess: (data) => {
+      if (data?.success) {
+        toast.success('Post shared successfully!');
+        setShowShareModal(false);
+        setShareBody('');
+        queryClient.invalidateQueries({ queryKey: ['posts'] });
+        if (callback) callback();
+      }
+    },
+    onError: (error) => {
+      toast.error(error?.response?.data?.message || 'Failed to share post');
+    },
+  });
+  
+  const comments = commentsData?.data?.comments || commentsData?.comments || [];
+  const totalComments = commentsData?.data?.total || commentsData?.total || post?.commentsCount || 0;
+  const hasMoreComments = comments.length < totalComments;
+  const displayComments = (allComment || showComments) ? comments : (comments.length > 0 ? [comments[0]] : []);
+  
+  const handleCreateComment = (e) => {
+    e.preventDefault();
+    if (!commentContent.trim()) {
+      toast.error('Please enter a comment');
+      return;
     }
-    setLoading(false)
-  }
-
+    createCommentMutation.mutate({ content: commentContent, imageFile: commentImage });
+  };
+  
   const formatDate = (dateString) => {
     if (!dateString) return "Recently";
     const date = new Date(dateString);
     const now = new Date();
     const diffInMinutes = Math.floor((now - date) / (1000 * 60));
     
-    if (diffInMinutes < 60) return `${diffInMinutes} min ago`;
-    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} hours ago`;
-    return `${Math.floor(diffInMinutes / 1440)} days ago`;
+    if (diffInMinutes < 60) return `${diffInMinutes}m`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h`;
+    return `${Math.floor(diffInMinutes / 1440)}d`;
   };
+  
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.size <= 5 * 1024 * 1024) {
+      setCommentImage(file);
+      const previewUrl = URL.createObjectURL(file);
+      setCommentImagePreview(previewUrl);
+    } else if (file) {
+      toast.error('Image must be less than 5MB');
+    }
+  };
+  
+  const removeImage = () => {
+    if (commentImagePreview) {
+      URL.revokeObjectURL(commentImagePreview);
+    }
+    setCommentImage(null);
+    setCommentImagePreview(null);
+  };
+  
+  const loadMoreComments = () => {
+    setCurrentPage(prev => prev + 1);
+  };
+  
+  const handleLike = () => {
+    likeMutation.mutate();
+  };
+  
+  const handleBookmark = () => {
+    bookmarkMutation.mutate();
+  };
+  
+  const handleShare = () => {
+    if (!shareBody.trim()) {
+      toast.error('Please add a caption for your share');
+      return;
+    }
+    shareMutation.mutate();
+  };
+  
+  // Get shared post data if exists
+  const sharedPost = post?.sharedPost;
+  const isShared = !!sharedPost;
+  
   return (
     <>
-   <div className='container px-6 lg:px-56 flex justify-center h-fit'>
-      <div className="bg-white w-full rounded-2xl shadow-md h-auto py-3 px-3 my-3">
-            <div className="w-full h-16 flex items-center justify-between ">
-            <div className="flex">
-                <img className=" rounded-full w-10 h-10 mr-3" 
-                src={post.user?.photo || ""} 
-                alt={post.user?.name || "User"} />
-                <div>    
-                <h3 className="text-md font-semibold ">{post.user?.name || "Anonymous User"}</h3>
-                <p className="text-xs text-gray-500"> {formatDate(post.createdAt)}</p>
-                </div>
+      <Card className="w-full mb-4 shadow-sm">
+        {/* Header */}
+        <div className="p-4 flex items-center justify-between">
+          <Link to={`/profile/${post?.user?._id}`} className="flex items-center gap-3 flex-1">
+            <Avatar 
+              src={post?.user?.photo || ""} 
+              size="md"
+              fallback={<FaUserCircle className="text-2xl text-gray-400" />}
+            />
+            <div>
+              <p className="font-semibold text-sm">{post?.user?.name || "Anonymous"}</p>
+              <p className="text-xs text-gray-500">{formatDate(post?.createdAt)}</p>
             </div>
-            {userData?._id === post.user?._id &&
-              <PostDropDown callback={callback} postId={post._id} />
-            }
-            </div>
-            <p>{post.body || "No content available"}</p>
-            {post.image && (
-                <div className="mt-3">
-                <img 
-                    src={post.image} 
-                    alt="Post" 
-                    className="w-full h-auto rounded-md max-h-96 object-cover"
-                />
-                </div>
+          </Link>
+          <div className="flex items-center gap-2">
+            <button onClick={handleBookmark} className="focus:outline-none cursor-pointer">
+              {isBookmarked ? (
+                <FaBookmark className="text-yellow-500 text-lg" />
+              ) : (
+                <FaRegBookmark className="text-gray-500 text-lg hover:text-yellow-500" />
+              )}
+            </button>
+            {userData?._id === post?.user?._id && (
+              <PostDropDown callback={callback} postId={post?._id} />
             )}
+          </div>
+        </div>
         
-       
-        <div className="w-full h-8 flex items-center px-3 my-3">
-          <div className="bg-blue-500 z-10 w-5 h-5 rounded-full flex items-center justify-center ">
-            <svg className="w-3 h-3 fill-current text-white" xmlns="http://www.w3.org/2000/svg" width={27} height={27} viewBox="0 0 24 24" fill="none" stroke="#b0b0b0" strokeWidth={2} strokeLinecap="square" strokeLinejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" /></svg>
-          </div>
-          <div className="bg-red-500 w-5 h-5 rounded-full flex items-center justify-center -ml-1">
-            <svg className="w-3 h-3 fill-current stroke-current text-white" xmlns="http://www.w3.org/2000/svg" width={27} height={27} viewBox="0 0 24 24" fill="none" stroke="#b0b0b0" strokeWidth={2} strokeLinecap="square" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
-          </div>
-
-          <div className="w-full flex justify-between">
-            <p className="ml-3 text-gray-500">8</p>
-            <Link to={`/singlepost/${post._id}`}>
-             <p className="ml-3 text-gray-500">{post.comments.length} comments</p>
-            </Link>
-          </div>
+        {/* Content */}
+        <div className="px-4 pb-3">
+          <p className="text-gray-800 text-sm whitespace-pre-wrap">{post?.body || "No content"}</p>
+          
+          {/* Shared Post */}
+          {isShared && sharedPost && (
+            <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Avatar 
+                  src={sharedPost?.user?.photo || ""} 
+                  size="sm"
+                  fallback={<FaUserCircle className="text-gray-400" />}
+                />
+                <span className="text-xs font-medium">{sharedPost?.user?.name}</span>
+              </div>
+              <p className="text-sm text-gray-700">{sharedPost?.body}</p>
+              {sharedPost?.image && (
+                <img 
+                  src={sharedPost.image} 
+                  alt="Shared post" 
+                  className="mt-2 rounded-lg max-h-48 w-full object-cover"
+                />
+              )}
+            </div>
+          )}
+          
+          {/* Post Image */}
+          {post?.image && !isShared && (
+            <img 
+              src={post.image} 
+              alt="Post" 
+              className="mt-3 rounded-lg max-h-96 w-full object-cover"
+            />
+          )}
         </div>
-
-        <hr className='text-gray-300'/>
-        <div className="grid grid-cols-3 w-full px-5 my-3">
-          <button className="flex flex-row justify-center items-center w-full space-x-3"><svg xmlns="http://www.w3.org/2000/svg" width={27} height={27} viewBox="0 0 24 24" fill="none" stroke="#838383" strokeWidth={2} strokeLinecap="square" strokeLinejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" /></svg>
-            <span className="font-semibold text-lg text-gray-600">Like</span></button>
-          <button className="flex flex-row justify-center items-center w-full space-x-3"><svg xmlns="http://www.w3.org/2000/svg" width={27} height={27} viewBox="0 0 24 24" fill="none" stroke="#838383" strokeWidth={2} strokeLinecap="square" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-            <span className="font-semibold text-lg text-gray-600">Comment</span></button>
-          <button className="flex flex-row justify-center items-center w-full space-x-3"><svg xmlns="http://www.w3.org/2000/svg" width={27} height={27} viewBox="0 0 24 24" fill="none" stroke="#838383" strokeWidth={2} strokeLinecap="square" strokeLinejoin="round"><circle cx={18} cy={5} r={3} /><circle cx={6} cy={12} r={3} /><circle cx={18} cy={19} r={3} /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
-            <span className="font-semibold text-lg text-gray-600">Share</span></button>
+        
+        <Divider />
+        
+        {/* Stats */}
+        <div className="px-4 py-2 flex justify-between text-sm text-gray-500">
+          <div className="flex items-center gap-1">
+            <FaHeart className="text-red-500 text-sm" />
+            <span>{likesCount}</span>
+          </div>
+          <button 
+            onClick={() => setShowComments(!showComments)}
+            className="hover:text-blue-500 transition"
+          >
+            {totalComments} {totalComments === 1 ? 'comment' : 'comments'}
+          </button>
         </div>
-        <hr className='text-gray-300'/>
-
-        {/* Add comment section */}
-
-        <div className="flex w-full items-center justify-around pt-3">
-          <form onSubmit={createComment} className='flex w-full items-center justify-around gap-4'>
-            <input onChange={(e) => {setCommentContent(e.target.value)}} value={commentContent} type="text" className='p-2 w-full border-1 border-gray-300 outline-0 focus:outline-2 focus:outline-gray-400 rounded-lg' placeholder='add a comment..' />
-            <Button color="primary" variant="shadow" type='submit' isLoading={Loading} >
-              Comment
-            </Button>
+        
+        <Divider />
+        
+        {/* Actions */}
+        <div className="px-4 py-2 flex justify-around">
+          <Button 
+            variant="light" 
+            size="sm" 
+            className="flex-1 gap-2"
+            onClick={handleLike}
+            isLoading={likeMutation.isLoading}
+          >
+            {isLiked ? <FaHeart className="text-red-500" /> : <FaRegHeart />} 
+            Like
+          </Button>
+          <Button 
+            variant="light" 
+            size="sm" 
+            className="flex-1 gap-2"
+            onClick={() => setShowComments(!showComments)}
+          >
+            <FaComment /> Comment
+          </Button>
+          <Button 
+            variant="light" 
+            size="sm" 
+            className="flex-1 gap-2"
+            onClick={() => setShowShareModal(true)}
+          >
+            <FaShare /> Share
+          </Button>
+        </div>
+        
+        <Divider />
+        
+        {/* Add Comment */}
+        <div className="px-4 py-3">
+          <form onSubmit={handleCreateComment} className="flex gap-2">
+            <Avatar 
+              src={userData?.photo} 
+              size="sm"
+              fallback={<FaUserCircle className="text-gray-400" />}
+            />
+            <div className="flex-1">
+              <input
+                value={commentContent}
+                onChange={(e) => setCommentContent(e.target.value)}
+                placeholder="Write a comment..."
+                className="w-full px-3 py-2 text-sm bg-gray-50 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+                disabled={createCommentMutation.isLoading}
+              />
+              
+              {/* Image Preview */}
+              {commentImagePreview && (
+                <div className="mt-2 relative">
+                  <img 
+                    src={commentImagePreview} 
+                    alt="Comment preview" 
+                    className="rounded-lg max-h-32 w-auto object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition"
+                  >
+                    <FaTrash className="text-xs" />
+                  </button>
+                </div>
+              )}
+            </div>
+            <div className="flex gap-1">
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageChange}
+                  disabled={createCommentMutation.isLoading}
+                />
+                <div className={`p-2 hover:bg-gray-100 rounded-lg transition ${commentImagePreview ? 'text-blue-500' : 'text-gray-500'}`}>
+                  <FaImage className="w-5 h-5" />
+                </div>
+              </label>
+              <Button
+                type="submit"
+                color="primary"
+                size="sm"
+                isLoading={createCommentMutation.isLoading}
+              >
+                Post
+              </Button>
+            </div>
           </form>
         </div>
-
-        {/* Comments section */}
-       
-        {post.comments.length > 0 && allComment == false ?
-          <div className='pt-3'>
-            <CommentCard id={post.user._id} callback={callback} comment={post.comments[0]} />
+        
+        {/* Comments Section */}
+        {(allComment || showComments) && (
+          <div className="px-4 pb-4">
+            {commentsLoading && currentPage === 1 ? (
+              <div className="flex justify-center py-4">
+                <Spinner size="sm" />
+              </div>
+            ) : displayComments.length > 0 ? (
+              <div className="space-y-3">
+                {displayComments.map((comment) => (
+                  <CommentCard
+                    key={comment._id}
+                    comment={comment}
+                    postId={post?._id} 
+                    callback={callback}
+                  />
+                ))}
+                
+                {hasMoreComments && (
+                  <Button
+                    variant="light"
+                    size="sm"
+                    onClick={loadMoreComments}
+                    isLoading={isFetchingMore}
+                    className="w-full text-sm"
+                  >
+                    {isFetchingMore ? 'Loading...' : `Load more (${comments.length} of ${totalComments})`}
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <FaComment className="text-2xl text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">No comments yet</p>
+              </div>
+            )}
           </div>
-        :
-          <div className="flex flex-col gap-3 pt-3">
-            {post.comments.map((comment) => { return  <CommentCard key={comment._id} id={post.user._id} callback={callback} comment={comment} /> })}
+        )}
+      </Card>
+      
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">Share this post</h3>
+            <textarea
+              value={shareBody}
+              onChange={(e) => setShareBody(e.target.value)}
+              placeholder="Write something about this post..."
+              className="w-full p-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+              rows="4"
+            />
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="light"
+                onPress={() => {
+                  setShowShareModal(false);
+                  setShareBody('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                color="primary"
+                onPress={handleShare}
+                isLoading={shareMutation.isLoading}
+              >
+                Share
+              </Button>
+            </div>
           </div>
-        } 
-      </div>
-    </div>
+        </div>
+      )}
     </>
-  )
+  );
 }
 
-export default PostCard
+export default PostCard;

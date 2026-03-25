@@ -15,7 +15,7 @@ export function AuthContextProvider({children}){
     async function fetchUserData(){
         const response = await GetUserData()
         if(response.message === 'success'){
-            setUserData(response.user)
+            setUserData(response.data.user)
         }
         //  console.log(response);    
     }

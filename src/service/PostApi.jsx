@@ -13,9 +13,7 @@ export async function getAllPosts() {
           sort: '-createdAt'
         }
     });
-    // console.log("Posts fetched successfully:", data);
     return data;
-    
   } catch (error) {
     return error;
   }
@@ -26,7 +24,7 @@ export async function getSinglePost(id){
     const {data} = await axios.get(`${BASE_URL}/posts/${id}`, {
       headers: { token: localStorage.getItem('token') }
     });
-    console.log("Single post data:", data);
+    // console.log("Single post data:", data);
     return data;
   } catch (error) {
     console.error("Error in getSinglePost:", error);
@@ -37,9 +35,12 @@ export async function getSinglePost(id){
 export async function CreateMyPost(formData){
   try {
     const {data} = await axios.post(`${BASE_URL}/posts`, formData, {
-      headers: { token: localStorage.getItem('token') }
+      headers: { 
+        token: localStorage.getItem('token'),
+        'Content-Type': 'multipart/form-data' 
+      }
     });
-    // console.log("Single post data:", data);
+    // console.log("Post created successfully:", data);
     return data;
   } catch (error) {
     console.error("Error in CreateMyPost:", error);
@@ -52,7 +53,6 @@ export async function UpdatePost(formData, postId){
     const {data} = await axios.put(`${BASE_URL}/posts/${postId}`, formData, {
       headers: { token: localStorage.getItem('token') }
     });
-    // console.log("Single post data:", data);
     return data;
   } catch (error) {
     console.error("Error in UpdatePost:", error);
@@ -65,7 +65,7 @@ export async function DeletePost(id){
     const {data} = await axios.delete(`${BASE_URL}/posts/${id}`, {
         headers: { token: localStorage.getItem('token') }
     });
-    console.log("delete post data:", data);
+    // console.log("delete post data:", data);
     return data;
   } catch (error) {
     console.error("Error in DeleteComment:", error);
@@ -75,16 +75,64 @@ export async function DeletePost(id){
 
 export async function getUserPosts(id) {
   try {
-    const {data} = await axios.get(`${BASE_URL}/users/${id}/posts?`, {
+    const {data} = await axios.get(`${BASE_URL}/users/${id}/posts`, {
         headers: {
             token: localStorage.getItem('token'),
         },
     });
-    //  console.log("Posts fetched successfully:", data);
     return data;
-    
   } catch (error) {
     console.log(error);
+    return error;
+  }
+}
+
+// New Functions for Post Interactions
+
+export async function LikePost(postId) {
+  try {
+    const {data} = await axios.put(`${BASE_URL}/posts/${postId}/like`, {}, {
+      headers: { 
+        token: localStorage.getItem('token')
+      }
+    });
+    // console.log("Like/Unlike response:", data);
+    return data;
+  } catch (error) {
+    console.error("Error in LikePost:", error);
+    return error;
+  }
+}
+
+export async function BookmarkPost(postId) {
+  try {
+    const {data} = await axios.put(`${BASE_URL}/posts/${postId}/bookmark`, {}, {
+      headers: { 
+        token: localStorage.getItem('token')
+      }
+    });
+    // console.log("Bookmark/Unbookmark response:", data);
+    return data;
+  } catch (error) {
+    console.error("Error in BookmarkPost:", error);
+    return error;
+  }
+}
+
+export async function SharePost(postId, shareBody) {
+  try {
+    const {data} = await axios.post(`${BASE_URL}/posts/${postId}/share`, {
+      body: shareBody
+    }, {
+      headers: { 
+        token: localStorage.getItem('token'),
+        'Content-Type': 'application/json'
+      }
+    });
+    // console.log("Share post response:", data);
+    return data;
+  } catch (error) {
+    console.error("Error in SharePost:", error);
     return error;
   }
 }

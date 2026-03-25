@@ -20,8 +20,8 @@ function SinglePost() {
       const response = await getSinglePost(id);
       
       if (response.message === 'success') {
-        setPost(response.post);
-        console.log(response.post);
+        setPost(response.data.post);
+        console.log(response.data.post);
       } 
     } catch (error) {
       console.error("Error fetching post:", error);
@@ -34,7 +34,7 @@ function SinglePost() {
           <meta charSet="utf-8" />
           <title>Post</title>
       </Helmet>
-    <div className='min-h-screen container flex flex-col items-center'>
+    <div className='min-h-screen container flex flex-col items-center py-4'>
       {post ?  
       <PostCard post={post} allComment={true} callback={fetchPost} /> 
       : 
