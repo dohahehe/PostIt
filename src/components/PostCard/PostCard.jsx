@@ -11,7 +11,7 @@ import { AuthContext } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
 function PostCard({ post, allComment = false, callback }) {
-  const { userData } = useContext(AuthContext); 
+  const { userData } = useContext(AuthContext); // Move this to the top
   
   const [commentContent, setCommentContent] = useState('');
   const [commentImage, setCommentImage] = useState(null);
@@ -21,6 +21,7 @@ function PostCard({ post, allComment = false, callback }) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareBody, setShareBody] = useState('');
   
+  // Now userData is defined, so we can use it here
   const [isLiked, setIsLiked] = useState(post?.likes?.includes(userData?._id) || false);
   const [isBookmarked, setIsBookmarked] = useState(post?.bookmarked || false);
   const [likesCount, setLikesCount] = useState(post?.likesCount || 0);
@@ -217,40 +218,43 @@ function PostCard({ post, allComment = false, callback }) {
         </div>
         
         {/* Content */}
-        <div className="px-4 pb-3">
-          <p className="text-gray-800 text-sm whitespace-pre-wrap">{post?.body || "No content"}</p>
-          
-          {/* Shared Post */}
-          {isShared && sharedPost && (
-            <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-              <div className="flex items-center gap-2 mb-2">
-                <Avatar 
-                  src={sharedPost?.user?.photo || ""} 
-                  size="sm"
-                  fallback={<FaUserCircle className="text-gray-400" />}
-                />
-                <span className="text-xs font-medium">{sharedPost?.user?.name}</span>
+        <Link to={`/singlepost/${post?._id}`}>
+            <div className="px-4 pb-3">
+            <p className="text-gray-800 text-sm whitespace-pre-wrap">{post?.body || "No content"}</p>
+            
+            {/* Shared Post */}
+            {isShared && sharedPost && (
+              <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <Avatar 
+                    src={sharedPost?.user?.photo || ""} 
+                    size="sm"
+                    fallback={<FaUserCircle className="text-gray-400" />}
+                  />
+                  <span className="text-xs font-medium">{sharedPost?.user?.name}</span>
+                </div>
+                <p className="text-sm text-gray-700">{sharedPost?.body}</p>
+                {sharedPost?.image && (
+                  <img 
+                    src={sharedPost.image} 
+                    alt="Shared post" 
+                    className="mt-2 rounded-lg max-h-48 w-full object-cover"
+                  />
+                )}
               </div>
-              <p className="text-sm text-gray-700">{sharedPost?.body}</p>
-              {sharedPost?.image && (
-                <img 
-                  src={sharedPost.image} 
-                  alt="Shared post" 
-                  className="mt-2 rounded-lg max-h-48 w-full object-cover"
-                />
-              )}
-            </div>
-          )}
-          
-          {/* Post Image */}
-          {post?.image && !isShared && (
-            <img 
-              src={post.image} 
-              alt="Post" 
-              className="mt-3 rounded-lg max-h-96 w-full object-cover"
-            />
-          )}
-        </div>
+            )}
+            
+            {/* Post Image */}
+            {post?.image && !isShared && (
+              <img 
+                src={post.image} 
+                alt="Post" 
+                className="mt-3 rounded-lg max-h-96 w-full object-cover"
+              />
+            )}
+          </div>
+        </Link>
+        
         
         <Divider />
         
