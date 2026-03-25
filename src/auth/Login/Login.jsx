@@ -39,7 +39,7 @@ function Login() {
     // console.log('Login attempt:', userData);
       try {
       const result = await SignIn(userData);
-      // console.log('Login result:', result);
+      console.log('Login result:', result);
       
       if (result.success === true || result.token) {
         toast.success('Logged in Successfully!')
@@ -52,10 +52,10 @@ function Login() {
         });
         
         // Save token to localStorage & context
-        if (result.token) {
-          localStorage.setItem('token', result.token);
-          localStorage.setItem('user', JSON.stringify(result.user || {}));
-          setUserToken(result.token);
+        if (result.data.token) {
+          localStorage.setItem('token', result.data.token);
+          localStorage.setItem('user', JSON.stringify(result.data.user || {}));
+          setUserToken(result.data.token);
         }
         
         // Redirect to home
