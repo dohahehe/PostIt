@@ -1,4 +1,4 @@
-import {Input, Select, SelectItem, Button} from "@heroui/react";
+import { Input, Button } from "@heroui/react";
 import { useContext, useState } from "react";
 import schema from '../../schema/LoginSchema'
 import { useForm } from "react-hook-form"
@@ -8,22 +8,13 @@ import { AuthContext } from "../../context/AuthContext";
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from "react-hot-toast";
 import { Helmet } from "react-helmet";
-
-
-// ? Conttrolled VS Unconrolled components
-// ! Controlled: control its value through react, you have the value all the time
-// ! Unconrolled: control its value through DOM, you only have the value when you submit
-
-// ! using useState in controlled causes too many rerenders, useRef doesnt rerender the componenet with every change (uncontrolled)
-
-// ! Formik controlled
-
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 function Login() {
-  const [message, setMessage] = useState({ text: '', type: '', show: false });
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate(); // Initialize navigate
-  let {setUserToken} =  useContext(AuthContext);
+  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
+  let { setUserToken } = useContext(AuthContext);
 
   const { handleSubmit, register, formState: { errors, touchedFields } } = useForm({
     defaultValues: {
@@ -35,144 +26,137 @@ function Login() {
 
   async function submitForm(userData) {
     setIsLoading(true);
-    setMessage({ text: '', type: '', show: false });
-    // console.log('Login attempt:', userData);
-      try {
+    try {
       const result = await SignIn(userData);
-      console.log('Login result:', result);
       
       if (result.success === true || result.token) {
-        toast.success('Logged in Successfully!')
-
-        // Login successful
-        setMessage({ 
-          text: result.message || "Login successful!", 
-          type: 'success',
-          show: true 
-        });
+        toast.success('Welcome back!');
         
-        // Save token to localStorage & context
         if (result.data.token) {
           localStorage.setItem('token', result.data.token);
           localStorage.setItem('user', JSON.stringify(result.data.user || {}));
           setUserToken(result.data.token);
         }
         
-        // Redirect to home
         setTimeout(() => {
-          navigate('/home'); 
-        }, 2000);
-        
+          navigate('/home');
+        }, 1000);
       } else {
-        // Login failed
-        setMessage({ 
-          text: result.message || "Invalid email or password", 
-          type: 'error',
-          show: true 
-        });
+        toast.error(result.message || "Invalid email or password");
       }
-      
     } catch (error) {
-      console.error('Login error:', error);
-      setMessage({ 
-        text: "Network error. Please try again.", 
-        type: 'error',
-        show: true 
-      });
+      toast.error("Network error. Please try again.");
     } finally {
       setIsLoading(false);
     }
-
   }
 
   return (
     <>
       <Helmet>
-          <meta charSet="utf-8" />
-          <title>Login</title>
+        <meta charSet="utf-8" />
+        <title>Login - PostIt</title>
       </Helmet>
-      <div className='min-h-screen w-full text-center flex justify-center items-center'>
-        <div className='m-auto p-5 bg-white shadow rounded-2xl lg:w-1/3 md:w-1/2 min-w-xs'>
-          <h2 className='text-2xl font-bold my-4 text-sky-700'>Login</h2>
-          {/* Message Display */}
-          {message.show && (
-            <div className={`mb-4 p-3 rounded-lg ${message.type === 'success' 
-              ? 'bg-green-50 border border-green-200 text-green-800' 
-              : 'bg-red-50 border border-red-200 text-red-800'
-            }`}>
-              <div className="flex items-start">
-                {message.type === 'success' ? (
-                  <div className="shrink-0 mt-0.5">
-                    <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                ) : (
-                  <div className="shrink-0 mt-0.5">
-                    <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                )}
-                <div className="ml-3 flex-1">
-                  <p className="text-sm font-medium">
-                    {message.type === 'success' ? 'Success!' : 'Error!'}
-                  </p>
-                  <p className="mt-1 text-sm">{message.text}</p>
-                  
-                  {message.type === 'success' && (
-                    <p className="mt-2 text-xs text-green-600">
-                      Redirecting to home page...
-                    </p>
-                  )}
-                </div>
-                <button 
-                  onClick={() => setMessage({ text: '', type: '', show: false })}
-                  className="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 hover:bg-gray-100 focus:outline-none"
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          )}
+      
+      <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-900 bg-clip-text text-transparent">
+              PostIt
+            </h1>
+            <p className="text-gray-500 mt-2">Sign in to your account</p>
+          </div>
           
-          <form onSubmit={handleSubmit(submitForm)}>
-            <div className="flex flex-col gap-4">
-              <Input
-              isInvalid={Boolean(errors.email && touchedFields?.email)}
-              errorMessage={errors.email?.message} 
-              {...register('email' ,
+          {/* Login Card */}
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Welcome Back</h2>
+            
+            <form onSubmit={handleSubmit(submitForm)} className="space-y-5">
+              {/* Email Field */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address
+                </label>
+                <Input
+                  isInvalid={Boolean(errors.email && touchedFields?.email)}
+                  errorMessage={errors.email?.message}
+                  {...register('email')}
+                  placeholder="you@example.com"
+                  startContent={<FaEnvelope className="text-gray-400 text-lg" />}
+                  disabled={isLoading}
+                  classNames={{
+                    input: "text-sm",
+                    inputWrapper: "rounded-xl border-gray-200 focus:border-blue-500",
+                  }}
+                  size="lg"
+                />
+              </div>
               
-              )} label="Email" type="email" disabled={isLoading}/>
-              {/* <p className="text-red-900 text-left">{errors.email?.message}</p> */}
-              <Input
-              isInvalid={Boolean(errors.password)}
-              errorMessage={errors.password?.message}
-              {...register('password')} label="Password" type="password" disabled={isLoading}/>
+              {/* Password Field with Visibility Toggle */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <Input
+                  isInvalid={Boolean(errors.password)}
+                  errorMessage={errors.password?.message}
+                  {...register('password')}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  startContent={<FaLock className="text-gray-400 text-lg" />}
+                  endContent={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="focus:outline-none"
+                    >
+                      {showPassword ? (
+                        <FaEye className="text-gray-400 text-lg hover:text-gray-600" />
+                      ) : (
+                        <FaEyeSlash className="text-gray-400 text-lg hover:text-gray-600" />
+                      )}
+                    </button>
+                  }
+                  disabled={isLoading}
+                  classNames={{
+                    input: "text-sm",
+                    inputWrapper: "rounded-xl border-gray-200 focus:border-blue-500",
+                  }}
+                  size="lg"
+                />
+              </div>
               
-              <Button type='submit' className="my-4" color="primary" variant="shadow" isLoading={isLoading}
-                disabled={isLoading}>
-                 {isLoading ? 'Logging in...' : 'Login'}
+              {/* Submit Button */}
+              <Button
+                type='submit'
+                color="primary"
+                size="lg"
+                className="w-full rounded-xl font-semibold mt-2"
+                isLoading={isLoading}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Signing in...' : 'Sign In'}
               </Button>
-              <div className="text-center">
+              
+              {/* Register Link */}
+              <div className="text-center pt-4">
                 <p className="text-gray-600 text-sm">
                   Don't have an account?{' '}
                   <NavLink
-                    to="/register" 
-                    className="text-blue-600 hover:text-blue-800 font-medium"
+                    to="/register"
+                    className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
                   >
-                    Register here
+                    Create account
                   </NavLink>
                 </p>
               </div>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
     </>
   )
 }
 
-export default Login
+export default Login;

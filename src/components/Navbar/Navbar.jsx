@@ -10,16 +10,30 @@ import {
   Avatar,
   Button,
 } from "@heroui/react";
-import { useContext, useState } from "react";
-import { NavLink, useNavigate, Link } from "react-router-dom";
+import { useContext, useState, useEffect } from "react";
+import { NavLink, useNavigate, Link, useLocation } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
-import { FaBars, FaTimes, FaCompass, FaRss, FaUser, FaCog, FaBookmark } from "react-icons/fa";
+import { FaBars, FaTimes, FaCompass, FaRss, FaUser, FaCog, FaBookmark, FaHome } from "react-icons/fa";
 import NotificationsDropdown from "../NotificationsDropdown/NotificationsDropdown";
 
 export default function Navbar() {
   let { userToken, setUserToken, userData, setUserData } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Check if on auth pages
+  const isAuthPage = location.pathname === '/' || location.pathname === '/register';
+
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -41,53 +55,62 @@ export default function Navbar() {
 
   return (
     <>
-      <HeroNav className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-50"
-      style={{ maxWidth: '100%' }}
-      classNames={{
-        wrapper: "max-w-7xl w-full mx-auto px-4",
-      }}>
+      <HeroNav 
+        className={`bg-white/80 backdrop-blur-md border-b transition-all duration-300 sticky top-0 z-50 ${
+          isScrolled ? 'shadow-md bg-white/95' : 'shadow-sm bg-white/80'
+        } ${isAuthPage ? 'border-gray-100' : 'border-gray-100'}`}
+        style={{ maxWidth: '100%' }}
+        classNames={{
+          wrapper: "max-w-7xl w-full mx-auto px-4",
+        }}
+      >
         <div className="max-w-7xl w-full mx-auto px-4 py-2 flex items-center justify-between">
           <NavbarBrand>
-            <p
-              onClick={() => navigate('/home')}
-              className="font-bold text-xl text-gray-800 cursor-pointer hover:text-blue-600 transition-colors"
+            <div 
+              onClick={() => navigate(userToken ? '/home' : '/')}
+              className="flex items-center gap-2 cursor-pointer group"
             >
-              PostIt
-            </p>
+              <p className="font-bold text-xl text-gray-800 group-hover:text-blue-600 transition-colors">
+                PostIt
+              </p>
+            </div>
           </NavbarBrand>
           
-          <div className="flex justify-end gap-8 items-center">
+          <div className="flex justify-end gap-4 md:gap-8 items-center">
             {/* Desktop Navigation Links */}
-            {userToken != null && (
-              <div className="hidden md:flex gap-6">
-                {navItems.map((item) => (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    className={({ isActive }) =>
-                      `text-sm font-medium transition-colors ${
-                        isActive ? 'text-blue-600' : 'text-gray-600 hover:text-blue-600'
-                      }`
-                    }
-                  >
-                    {item.label}
-                  </NavLink>
-                ))}
+            {userToken != null && !isAuthPage && (
+              <div className="hidden md:flex gap-1">
+                {navItems.map((item) => {
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <NavLink
+                      key={item.path}
+                      to={item.path}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                        isActive 
+                          ? 'bg-blue-50 text-blue-600' 
+                          : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      {item.label}
+                    </NavLink>
+                  );
+                })}
               </div>
             )}
             
             {/* User Menu */}
             {userToken != null ? (
-              <div className="flex items-center gap-4">
-                {/* Notification Bell */}
-                <NotificationsDropdown />
+              <div className="flex items-center gap-2 md:gap-4">
+                {/* Notification Bell - Only show when logged in */}
+                {!isAuthPage && <NotificationsDropdown />}
                 
                 <Dropdown placement="bottom-end">
                   <DropdownTrigger className="cursor-pointer">
                     <Avatar
                       isBordered
                       as="button"
-                      className="transition-transform"
+                      className="transition-transform hover:scale-105"
                       color="primary"
                       name={userData?.name || 'User'}
                       size="md"
@@ -118,43 +141,62 @@ export default function Navbar() {
                 </Button>
               </div>
             ) : (
-              <NavbarContent className="flex gap-4" justify="center">
-                <NavbarItem>
-                  <NavLink to='/register' className="text-gray-600 hover:text-blue-600 transition-colors">
-                    Register
-                  </NavLink>
-                </NavbarItem>
-                <NavbarItem>
-                  <NavLink to='/' className="text-gray-600 hover:text-blue-600 transition-colors">
-                    Login
-                  </NavLink>
-                </NavbarItem>
-              </NavbarContent>
+              <div className="flex gap-3">
+                <NavLink
+                  to='/'
+                  className={({ isActive }) =>
+                    `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      isActive 
+                        ? 'bg-blue-50 text-blue-600' 
+                        : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                    }`
+                  }
+                >
+                  Login
+                </NavLink>
+                <NavLink
+                  to='/register'
+                  className={({ isActive }) =>
+                    `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      isActive 
+                        ? 'bg-blue-50 text-blue-600' 
+                        : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
+                    }`
+                  }
+                >
+                  Register
+                </NavLink>
+              </div>
             )}
           </div>
         </div>
       </HeroNav>
       
       {/* Mobile Menu Dropdown */}
-      {isMobileMenuOpen && userToken != null && (
+      {isMobileMenuOpen && userToken != null && !isAuthPage && (
         <>
           <div 
             className="fixed inset-0 bg-black/50 z-40 md:hidden"
             onClick={() => setIsMobileMenuOpen(false)}
           />
-          <div className="fixed top-16 left-0 right-0 bg-white shadow-lg z-40 md:hidden animate-slideDown">
-            <div className="p-4 space-y-2">
+          <div className="fixed top-16 left-0 right-0 bg-white shadow-xl z-40 md:hidden animate-slideDown rounded-b-2xl">
+            <div className="p-4 space-y-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
+                const isActive = location.pathname === item.path;
                 return (
                   <Link
                     key={item.path}
                     to={item.path}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 transition-colors"
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                      isActive 
+                        ? 'bg-blue-50 text-blue-600' 
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
                   >
-                    <Icon className="text-lg text-gray-500" />
-                    <span className="text-gray-700 font-medium">{item.label}</span>
+                    <Icon className={`text-lg ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
+                    <span className="font-medium">{item.label}</span>
                   </Link>
                 );
               })}

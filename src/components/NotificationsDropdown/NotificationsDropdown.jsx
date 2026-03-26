@@ -92,7 +92,6 @@ function NotificationsDropdown() {
   
   const getNotificationMessage = (notification) => {
     const actorName = notification.actor?.name || 'Someone';
-    const action = notification.type?.replace('_', ' ') || 'interacted with';
     
     switch (notification.type) {
       case 'follow':
@@ -108,7 +107,7 @@ function NotificationsDropdown() {
       case 'share_post':
         return `${actorName} shared your post`;
       default:
-        return notification.content || `${actorName} ${action} your content`;
+        return notification.content || `${actorName} interacted with your content`;
     }
   };
   
@@ -137,87 +136,102 @@ function NotificationsDropdown() {
       </button>
       
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-lg border border-gray-100 z-50 overflow-hidden">
-          <div className="flex items-center justify-between p-4 border-b border-gray-100">
-            <h3 className="font-semibold text-gray-800">Notifications</h3>
-            {notifications.length > 0 && (
-              <button
-                onClick={() => markAllReadMutation.mutate()}
-                disabled={markAllReadMutation.isLoading}
-                className="text-xs text-blue-500 hover:text-blue-600 transition-colors"
-              >
-                Mark all as read
-              </button>
-            )}
-          </div>
+        <>
+          {/* Backdrop for mobile */}
+          <div 
+            className="fixed inset-0 z-40 md:hidden"
+            onClick={() => setIsOpen(false)}
+          />
           
-          <div className="max-h-96 overflow-y-auto">
-            {isLoading ? (
-              <div className="flex justify-center py-8">
-                <FaSpinner className="animate-spin text-gray-400" />
-              </div>
-            ) : notifications.length > 0 ? (
-              <div className="divide-y divide-gray-100">
-                {notifications.map((notification) => (
-                  <Link
-                    key={notification._id}
-                    to={getNotificationLink(notification)}
-                    onClick={() => handleNotificationClick(notification)}
-                    className={`block p-4 hover:bg-gray-50 transition-colors ${
-                      !notification.isRead ? 'bg-blue-50/30' : ''
-                    }`}
-                  >
-                    <div className="flex gap-3">
-                      {/* Actor Avatar */}
-                      <Avatar
-                        src={notification.actor?.photo || ""}
-                        size="sm"
-                        className="flex-shrink-0"
-                        fallback={<div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                          {getNotificationIcon(notification.type)}
-                        </div>}
-                      />
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <p className="text-sm text-gray-800">
-                              <span className="font-semibold">{notification.actor?.name || 'Someone'}</span>
-                              {' '}
-                              <span className="text-gray-600">
-                                {getNotificationMessage(notification)}
-                              </span>
-                            </p>
-                            <p className="text-xs text-gray-400 mt-1">
-                              {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
-                            </p>
+          {/* Dropdown Content */}
+          <div className={`
+            absolute z-50 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden
+            transition-all duration-200 ease-out
+            /* Mobile styles */
+            fixed left-4 right-4 top-18 mx-auto
+            /* Tablet and desktop styles */
+            md:absolute md:left-auto md:right-0 md:top-auto md:mt-2 md:w-60 xl:w-74
+          `}>
+            <div className="flex items-center justify-between p-4 border-b border-gray-100">
+              <h3 className="font-semibold text-gray-800">Notifications</h3>
+              {notifications.length > 0 && (
+                <button
+                  onClick={() => markAllReadMutation.mutate()}
+                  disabled={markAllReadMutation.isLoading}
+                  className="text-xs text-blue-500 hover:text-blue-600 transition-colors"
+                >
+                  Mark all as read
+                </button>
+              )}
+            </div>
+            
+            <div className="max-h-96 overflow-y-auto">
+              {isLoading ? (
+                <div className="flex justify-center py-8">
+                  <FaSpinner className="animate-spin text-gray-400" />
+                </div>
+              ) : notifications.length > 0 ? (
+                <div className="divide-y divide-gray-100">
+                  {notifications.map((notification) => (
+                    <Link
+                      key={notification._id}
+                      to={getNotificationLink(notification)}
+                      onClick={() => handleNotificationClick(notification)}
+                      className={`block p-4 hover:bg-gray-50 transition-colors ${
+                        !notification.isRead ? 'bg-blue-50/30' : ''
+                      }`}
+                    >
+                      <div className="flex gap-3">
+                        {/* Actor Avatar */}
+                        <Avatar
+                          src={notification.actor?.photo || ""}
+                          size="sm"
+                          className="flex-shrink-0"
+                          fallback={<div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                            {getNotificationIcon(notification.type)}
+                          </div>}
+                        />
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <p className="text-sm text-gray-800">
+                                <span className="font-semibold">{notification.actor?.name || 'Someone'}</span>
+                                {' '}
+                                <span className="text-gray-600">
+                                  {getNotificationMessage(notification)}
+                                </span>
+                              </p>
+                              <p className="text-xs text-gray-400 mt-1">
+                                {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                              </p>
+                            </div>
+                            {!notification.isRead && (
+                              <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1" />
+                            )}
                           </div>
-                          {!notification.isRead && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1" />
+                          
+                          {notification.entity && notification.entityType === 'post' && (
+                            <div className="mt-2 p-2 bg-gray-50 rounded-lg text-xs text-gray-500 truncate">
+                              {notification.entity.body?.substring(0, 60)}
+                              {notification.entity.body?.length > 60 && '...'}
+                            </div>
                           )}
                         </div>
-                        
-                        {/* Preview of the entity if it's a post */}
-                        {notification.entity && notification.entityType === 'post' && (
-                          <div className="mt-2 p-2 bg-gray-50 rounded-lg text-xs text-gray-500 truncate">
-                            {notification.entity.body?.substring(0, 60)}
-                            {notification.entity.body?.length > 60 && '...'}
-                          </div>
-                        )}
                       </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <FaBell className="text-4xl text-gray-300 mx-auto mb-3" />
-                <p className="text-sm text-gray-500">No notifications yet</p>
-                <p className="text-xs text-gray-400 mt-1">When someone interacts with your posts, you'll see it here</p>
-              </div>
-            )}
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <FaBell className="text-4xl text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm text-gray-500">No notifications yet</p>
+                  <p className="text-xs text-gray-400 mt-1">When someone interacts with your posts, you'll see it here</p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
