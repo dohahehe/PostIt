@@ -4,7 +4,6 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 export async function SignIn(userdata){
     try {
         const {data} = await axios.post(`${BASE_URL}/users/signin`, userdata);
-        console.log("Login successful:", data);
         return data;
     } catch (error) {
         console.log("Login error:", error.response?.data || error.message);
@@ -62,7 +61,6 @@ export async function ChangePass(userdata){
             }
 
         });
-        console.log("ChangePass successful:", data);
         return data;
     } catch (error) {
         console.log("ChangePass error:", error);

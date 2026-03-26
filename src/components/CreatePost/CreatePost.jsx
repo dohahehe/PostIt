@@ -3,6 +3,7 @@ import { useState } from "react";
 import { CreateMyPost } from "../../service/PostApi";
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import toast from "react-hot-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 function CreatePost({ callback }) {
     const [Loading, setLoading] = useState(false);
@@ -11,6 +12,7 @@ function CreatePost({ callback }) {
     const [imagePreview, setImagePreview] = useState(null);
     const [charCount, setCharCount] = useState(0);
     const maxChars = 300;
+    const queryClient = useQueryClient();
 
     async function addPost(e) {
         e.preventDefault();
@@ -38,16 +40,25 @@ function CreatePost({ callback }) {
 
         try {
             const response = await CreateMyPost(formData);
-            console.log("Create post response:", response);
             
-            if (response?.message === 'success' || response?.data?.message === 'success') {
-                await callback();
+            if (response?.success === true) {
                 toast.success('Posted successfully!');
-                // Reset form
+                
+                // Reset form immediately
                 setPostBody("");
                 setPostImage(null);
                 setImagePreview(null);
                 setCharCount(0);
+
+                queryClient.invalidateQueries({ queryKey: ['posts'] });
+                queryClient.invalidateQueries({ queryKey: ['explore-posts'] });
+                queryClient.invalidateQueries({ queryKey: ['home-feed'] });
+                queryClient.invalidateQueries({ queryKey: ['userPosts'] });
+
+                // Call callback only if it exists and is a function
+                if (callback && typeof callback === 'function') {
+                    await callback();
+                }
             } else {
                 // Handle API error response
                 const errorMessage = response?.data?.message || response?.message || "Failed to create post";

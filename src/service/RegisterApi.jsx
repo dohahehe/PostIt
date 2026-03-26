@@ -11,7 +11,6 @@ export async function Signup(userdata) {
                 'Content-Type': 'application/json',
             }
         });
-        console.log("API Response data:", data);
         return { success: true, data, message: "Registration successful!" };
     } catch (error) {
         console.log("Full error object:", error);
