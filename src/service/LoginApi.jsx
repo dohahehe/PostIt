@@ -43,6 +43,7 @@ export async function uploadProfileImage(formData) {
             }
         }
     );
+
     return data;
   } catch (error) {
     console.error("Error uploading profile photo:", error);
@@ -56,8 +57,10 @@ export async function ChangePass(userdata){
             userdata,
         {
             headers: {
-            token: localStorage.getItem('token')
+            token: localStorage.getItem('token'),
+            'Content-Type': 'application/json'
             }
+
         });
         console.log("ChangePass successful:", data);
         return data;
@@ -71,4 +74,16 @@ export async function ChangePass(userdata){
     }
 }
 
-
+export async function getUserProfile(userId) {
+  try {
+    const { data } = await axios.get(`${BASE_URL}/users/${userId}/profile`, {
+      headers: {
+        token: localStorage.getItem('token'),
+      }
+    });
+    return data;
+  } catch (error) {
+    console.error("Error in getUserProfile:", error);
+    throw error;
+  }
+}

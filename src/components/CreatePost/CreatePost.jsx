@@ -81,7 +81,7 @@ function CreatePost({ callback }) {
             const previewUrl = URL.createObjectURL(file);
             setImagePreview(previewUrl);
         }
-        e.target.value = ''; // Reset input
+        e.target.value = ''; 
     }
 
     const removeImage = () => {
@@ -102,7 +102,7 @@ function CreatePost({ callback }) {
 
     return (
         <form onSubmit={addPost} className='w-full flex justify-center h-fit'>
-            <div className="bg-white w-full rounded-2xl shadow-md h-auto py-3 px-3 my-5 flex flex-col">
+            <div className="bg-white w-full rounded-2xl shadow-md h-auto py-3 px-3 mb-5 flex flex-col">
                 <textarea 
                     value={postBody}
                     onChange={handleBodyChange}

@@ -11,7 +11,7 @@ import { AuthContext } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
 function PostCard({ post, allComment = false, callback }) {
-  const { userData } = useContext(AuthContext); // Move this to the top
+  const { userData } = useContext(AuthContext); 
   
   const [commentContent, setCommentContent] = useState('');
   const [commentImage, setCommentImage] = useState(null);
@@ -21,7 +21,6 @@ function PostCard({ post, allComment = false, callback }) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareBody, setShareBody] = useState('');
   
-  // Now userData is defined, so we can use it here
   const [isLiked, setIsLiked] = useState(post?.likes?.includes(userData?._id) || false);
   const [isBookmarked, setIsBookmarked] = useState(post?.bookmarked || false);
   const [likesCount, setLikesCount] = useState(post?.likesCount || 0);
@@ -192,7 +191,7 @@ function PostCard({ post, allComment = false, callback }) {
       <Card className="w-full mb-4 shadow-sm">
         {/* Header */}
         <div className="p-4 flex items-center justify-between">
-          <Link to={`/profile/${post?.user?._id}`} className="flex items-center gap-3 flex-1">
+          <Link to={`/home/profile/${post?.user?._id}`} className="flex items-center gap-3 flex-1">
             <Avatar 
               src={post?.user?.photo || ""} 
               size="md"
@@ -218,7 +217,7 @@ function PostCard({ post, allComment = false, callback }) {
         </div>
         
         {/* Content */}
-        <Link to={`/singlepost/${post?._id}`}>
+        <Link to={`/home/singlepost/${post?._id}`}>
             <div className="px-4 pb-3">
             <p className="text-gray-800 text-sm whitespace-pre-wrap">{post?.body || "No content"}</p>
             

@@ -19,6 +19,30 @@ export async function getAllPosts() {
   }
 }
 
+export async function getHomeFeed(limit = 10, cursor = null) {
+  try {
+    const params = {
+      only: 'following',
+      limit: limit
+    };
+    
+    if (cursor) {
+      params.cursor = cursor;
+    }
+    
+    const {data} = await axios.get(`${BASE_URL}/posts/feed`, {
+        headers: {
+            token: localStorage.getItem('token'),
+        },
+        params: params
+    });
+    return data;
+  } catch (error) {
+    console.error("Error in getHomeFeed:", error);
+    throw error;
+  }
+}
+
 export async function getSinglePost(id){
     try {
     const {data} = await axios.get(`${BASE_URL}/posts/${id}`, {
@@ -134,5 +158,19 @@ export async function SharePost(postId, shareBody) {
   } catch (error) {
     console.error("Error in SharePost:", error);
     return error;
+  }
+}
+
+export async function getBookmarks() {
+  try {
+    const { data } = await axios.get(`${BASE_URL}/users/bookmarks`, {
+      headers: {
+        token: localStorage.getItem('token'),
+      }
+    });
+    return data;
+  } catch (error) {
+    console.error("Error in getBookmarks:", error);
+    throw error;
   }
 }

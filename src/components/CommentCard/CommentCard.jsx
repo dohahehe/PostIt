@@ -440,7 +440,7 @@ function CommentCard({ comment, postId, callback, isReply = false }) {
           </div>
         )}
 
-        {/* Replies List - Simple display without actions */}
+        {/* Replies List */}
         {!isReply && showReplies && (
           <div className="mt-2 ml-6 border-l-2 border-gray-200 pl-3">
             {repliesLoading && currentPage === 1 ? (
@@ -466,7 +466,7 @@ function CommentCard({ comment, postId, callback, isReply = false }) {
                     isLoading={isFetchingMore}
                     className="w-full text-xs"
                   >
-                    {isFetchingMore ? 'Loading...' : `Load more replies (${replies.length} of ${totalReplies})`}
+                    {isFetchingMore && 'Loading...'}
                   </Button>
                 )}
               </div>

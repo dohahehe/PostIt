@@ -1,34 +1,36 @@
-import {Card, Skeleton} from "@heroui/react";
-
+// components/LoadingPage/LoadingPage.jsx
 export default function LoadingPage() {
   return (
-    <div className="container px-6 lg:px-56 flex flex-col gap-8 justify-center h-fit py-6">
-      <Card className="w-full space-y-5 p-4" radius="lg">
-        <div className="flex items-center gap-6">
-          <div>
-            <Skeleton className="flex rounded-full w-12 h-12" />
+    <div className="space-y-4">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="bg-white rounded-2xl shadow-sm p-4 animate-pulse">
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-gray-200" />
+            <div className="flex-1">
+              <div className="h-4 w-32 bg-gray-200 rounded mb-2" />
+              <div className="h-3 w-24 bg-gray-200 rounded" />
+            </div>
           </div>
-          <div className="w-full flex flex-col gap-2">
-            <Skeleton className="h-3 w-1/5 rounded-lg" />
-            <Skeleton className="h-3 w-2/5 rounded-lg" />
+          
+          {/* Content */}
+          <div className="space-y-2 mb-3">
+            <div className="h-4 bg-gray-200 rounded w-full" />
+            <div className="h-4 bg-gray-200 rounded w-11/12" />
+            <div className="h-4 bg-gray-200 rounded w-10/12" />
+          </div>
+          
+          {/* Image placeholder */}
+          <div className="h-64 bg-gray-200 rounded-xl mb-3" />
+          
+          {/* Actions */}
+          <div className="flex gap-4 pt-2 border-t border-gray-100">
+            <div className="h-8 w-16 bg-gray-200 rounded" />
+            <div className="h-8 w-16 bg-gray-200 rounded" />
+            <div className="h-8 w-16 bg-gray-200 rounded" />
           </div>
         </div>
-        <Skeleton className="rounded-lg">
-          <div className="h-24 rounded-lg bg-default-300" />
-        </Skeleton>
-        <div className="space-y-3">
-          <Skeleton className="w-3/5 rounded-lg">
-            <div className="h-3 w-3/5 rounded-lg bg-default-200" />
-          </Skeleton>
-          <Skeleton className="w-4/5 rounded-lg">
-            <div className="h-3 w-4/5 rounded-lg bg-default-200" />
-          </Skeleton>
-          <Skeleton className="w-2/5 rounded-lg">
-            <div className="h-3 w-2/5 rounded-lg bg-default-300" />
-          </Skeleton>
-        </div>
-      </Card>
-      
+      ))}
     </div>
   );
 }
